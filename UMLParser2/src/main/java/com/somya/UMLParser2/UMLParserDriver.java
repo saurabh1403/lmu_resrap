@@ -25,13 +25,14 @@ public class UMLParserDriver {
 //		String classPath = args[0];
 //		String umlImagePath = args[1];	
 
+		String classPath = "/Users/saurabg/saurabg/Personal/sjsu/sem1_202/UMLParser2/UMLParser2_bkp/src/main/java/com/somya/UMLParser2";
 //		String classPath = "/Users/saurabg/saurabg/Personal/sjsu/sem1_202/UMLParser2/lmu_resrap/UMLParser2/src/main/java/com/somya/UMLParser2";
-//		String cn = "UMLParserDriver";
-//		String fn = "main";
+		String cn = "UMLParserDriver";
+		String fn = "main";
 
-		String classPath = "/Users/saurabg/saurabg/Personal/sjsu/sem1_202/midterm1-junit-problem/junit-problem";
-		String cn = "MTest";
-		String fn = "test4";
+//		String classPath = "/Users/saurabg/saurabg/Personal/sjsu/sem1_202/midterm1-junit-problem/junit-problem";
+//		String cn = "MTest";
+//		String fn = "test4";
 
 		String umlImagePath = "/Users/saurabg/saurabg/Personal/sjsu/sem1_202/TestInput/T2/output.png";
 

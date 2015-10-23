@@ -31,16 +31,17 @@ public class UMLDataGenerator {
 
 
 	public String populateUMLFormat() {
-		String umlBody = insertStartTag();
+		String umlBody;
+		umlBody = insertStartTag();
 		umlBody += "\n";
-		
-		generateFnCalls(cn_, fn_);
-		
+
+		this.generateFnCalls(cn_, fn_);
+
 		// generating participants
 		for (String c: classSeq) {
 			umlBody += "participant " + c + " \n";
 		}
-		
+
 		for (String cf : classFnSeq) {
 			umlBody += cf + " \n";
 		}
@@ -70,9 +71,11 @@ public class UMLDataGenerator {
 					classSet.add(cn);
 				}
 				for (functionCallInfo fc: m.mCalls) {
-					classFnSeq.add(cn + " -> " + fc.className + ": " + getFuncSignature(fc.className, fc.functionName));
-					this.generateFnCalls(fc.className, fc.functionName);
-					classFnSeq.add(fc.className +  " -> " + cn);
+					if (!fc.functionName.equals(fn)) {
+						classFnSeq.add(cn + " -> " + fc.className + ": " + getFuncSignature(fc.className, fc.functionName));
+						this.generateFnCalls(fc.className, fc.functionName);
+	//					classFnSeq.add(fc.className +  " -> " + cn);
+					}
 				}
 			}
 		}

@@ -19,7 +19,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 public class JavaFileParser extends VoidVisitorAdapter<ClassInfoData> {
 	private CompilationUnit cu;
-	
+
 	String currMethodName = "";
 	Map<String, String> currMethodLocalObjects = new HashMap<String, String>();
 	Map<String, String> memberObjects = new HashMap<String, String>();
@@ -38,50 +38,66 @@ public class JavaFileParser extends VoidVisitorAdapter<ClassInfoData> {
 		return cdata;
 	}
 
-    @Override
-    public void visit(final MethodCallExpr n, final ClassInfoData arg){
+	@Override
+	public void visit(final MethodCallExpr n, final ClassInfoData arg) {
 
-    	String mn = n.getName();     	// get the fn name which is called
+		String mn = n.getName(); // get the fn name which is called
+		
+		if (n.getScope() == null) {
+			System.out.println("null scope for method: " + mn);
+			super.visit(n, arg);
+			return;
+		}
+		
+		String on = n.getScope().toString();
 
-    	if (n.getScope() != null) {
-	    	String on = n.getScope().toString();    	// get the obj name on which it is called
-	    	
-	    	functionCallInfo fn = null;
-	    	if (this.currMethodLocalObjects.containsKey(on)) {
-	    		fn = new functionCallInfo(this.currMethodLocalObjects.get(on), mn);
-	    	} else if (this.memberObjects.containsKey(on)) {
-	    		fn = new functionCallInfo(this.memberObjects.get(on), mn);
-	    	} else {
-	    		// should never happen on this planet
-	    		System.out.println("no obj for: " + on + " for fn: " + mn);
-	    	}
-	    	
-	    	if (fn != null && arg.funcList.containsKey(this.currMethodName)) {
-	    		arg.funcList.get(this.currMethodName).mCalls.add(fn);
-	    	}
-    	}
-        super.visit(n, arg);
-    }
+		functionCallInfo fn = null;
+		if (this.currMethodLocalObjects.containsKey(on)) {
+			fn = new functionCallInfo(this.currMethodLocalObjects.get(on), mn);
+		} else if (this.memberObjects.containsKey(on)) {
+			fn = new functionCallInfo(this.memberObjects.get(on), mn);
+		} else {
+			// should never happen on this planet
+//			System.out.println("no obj for: " + on + " for fn: " + mn);
+		}
+
+		if (fn != null && arg.funcList.containsKey(this.currMethodName)) {
+			arg.funcList.get(this.currMethodName).mCalls.add(fn);
+		}
+		super.visit(n, arg);
+	}
 
 	@Override
 	public void visit(VariableDeclarationExpr n, ClassInfoData arg) {
 		// here you can access the attributes of the method.
-		// this method will be called for all methods in this 
+		// this method will be called for all methods in this
 		// CompilationUnit, including inner class methods
-		for (VariableDeclarator id: n.getVars()) {
+		for (VariableDeclarator id : n.getVars()) {
 			this.currMethodLocalObjects.put(id.getId().getName(), n.getType().toString());
 		}
-		arg.test();
+		super.visit(n, arg);
 	}
+	
+	@Override
+	public void visit(VariableDeclarator n, ClassInfoData arg) {
+		System.out.println("var dec: " + n.toString());
+		// here you can access the attributes of the method.
+		// this method will be called for all methods in this
+		// CompilationUnit, including inner class methods
+//		for (VariableDeclarator id : n.getVars()) {
+//			this.currMethodLocalObjects.put(id.getId().getName(), n.getType().toString());
+//		}
+		super.visit(n, arg);
+	}
+
 
 	@Override
 	public void visit(ClassOrInterfaceDeclaration n, ClassInfoData cid) {
 		// prints current class Name
 		cid.className = n.getName();
-		cid.test();
+		this.memberObjects.put("this", n.getName());
 		super.visit(n, cid);
 	}
-
 
 	@Override
 	public void visit(MethodDeclaration n, ClassInfoData cid) {
@@ -96,15 +112,14 @@ public class JavaFileParser extends VoidVisitorAdapter<ClassInfoData> {
 
 		this.currMethodName = n.getName();
 		currMethodLocalObjects.clear();
-		
+
 		// get the parameters of the function in form of a list
 		java.util.List<Parameter> ret = n.getParameters();
 		for (Parameter elem : ret) {
 			this.currMethodLocalObjects.put(elem.getId().toString(), elem.getType().toString());
 		}
 
-		cid.test();
-		cid.funcList.put(n.getName(),  m);
+		cid.funcList.put(n.getName(), m);
 		super.visit(n, cid);
 	}
 
@@ -113,25 +128,25 @@ public class JavaFileParser extends VoidVisitorAdapter<ClassInfoData> {
 		for (VariableDeclarator elem : n.getVariables()) {
 			this.memberObjects.put(elem.getId().getName(), n.getType().toString());
 		}
-		cid.test();
+		super.visit(n, cid);
 	}
 
 	private static void pruneLibfunctionsFromMethod(MethodInfo m, Map<String, ClassInfoData> classes) {
 		Iterator<functionCallInfo> itr = m.mCalls.iterator();
-		while(itr.hasNext()) {
+		while (itr.hasNext()) {
 			functionCallInfo fn = itr.next();
 			if (!classes.containsKey(fn.className)) {
 				itr.remove();
 			}
 		}
 	}
-	
+
 	public static void pruneLibFunctions(Map<String, ClassInfoData> classes) {
-		for (Map.Entry<String, ClassInfoData> entry: classes.entrySet()) {
-			for (MethodInfo m: entry.getValue().funcList.values()) {
+		for (Map.Entry<String, ClassInfoData> entry : classes.entrySet()) {
+			for (MethodInfo m : entry.getValue().funcList.values()) {
 				pruneLibfunctionsFromMethod(m, classes);
 			}
 		}
-		
+
 	}
 }
